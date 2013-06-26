@@ -1,0 +1,1 @@
+Foi incluido o arquivo .htaccess neste diretorio, o certificado da empresa no diretorio certs e o arquivo de configuração no diretorio config. Diretório exemplos foi deletado.

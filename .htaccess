@@ -1,0 +1,3 @@
+<FilesMatch "^(config\.exemplo|config|login_bd|login_ldap|organizaNfesEmitidas|organizaXML|util|wrapperConfigNfePhp)\.php$">
+deny from all
+</FilesMatch>

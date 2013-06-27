@@ -34,20 +34,25 @@ $senhaLogin = filter_input(INPUT_POST, 'senha', FILTER_SANITIZE_STRING);
 $mensagemLogin = filter_input(INPUT_GET, 'msg', FILTER_SANITIZE_STRING);
 
 switch ($mensagemLogin) {
-	case 'valores':
+	case 'login':
 		$tipoMensagem = "error";
 		$mensagem = "É necessário fazer login";
+		break;
+	
+	case 'timeout':
+		$tipoMensagem = "error";
+		$mensagem = "Tempo de sessão esgotado";
 		break;
 
 	case 'logout':
 		session_start("organizadorxml");
-		if (isset($_COOKIE[session_name("organizadorxml")]))
-			setcookie(session_name("organizadorxml"), '', time() - 42000, '/');
-		session_destroy();
-		unset($_SESSION);
-		$tipoMensagem = "success";
-		$mensagem = "Logout efetuado com sucesso";
-		break;
+		if (! empty($_SESSION['usuario'])) {
+			session_destroy();
+			unset($_SESSION);
+			$tipoMensagem = "success";
+			$mensagem = "Logout efetuado com sucesso";
+			break;
+		}
 }
 
 if ((isset($_POST['entrar'])) && (!empty($usuarioLogin)) && (!empty($senhaLogin))) {
@@ -55,14 +60,20 @@ if ((isset($_POST['entrar'])) && (!empty($usuarioLogin)) && (!empty($senhaLogin)
 		$tipoMensagem = "error";
 		$mensagem = "O sistema não está configurado para utilizar login";
 	} else {
+		$retornoLogin = 0;
 		if (strtolower($modoLogin) == 'ldap') require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "login_ldap.php");
 		elseif (strtolower($modoLogin) == 'banco') require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "login_bd.php");
 
 		if ($retornoLogin == 1) {
-			// tempo, em minutos, para a sessão expirar
-			session_cache_expire(120);
+			/*if (isset($_POST['lembrarLogin'])) {
+				$usuarioCookie = sha1(md5("spock".$usuarioLogin));
+				$senhaCookie = sha1(md5("spock".$senhaLogin));
+				$tempoCookie = strtotime('7 day', time()); //cookie expira em 7 dias
+				setcookie('kirkOXML', "x={$usuarioCookie}&z=${$senhaCookie}", $tempoCookie);
+			}*/
 			session_start("organizadorxml");
 			$_SESSION['usuario'] = $usuarioLogin;
+			session_regenerate_id();
 			$pathScript = obtemPathScript();
 			header("Location: {$pathScript}index.php");
 		} else {
@@ -143,9 +154,9 @@ if ((isset($_POST['entrar'])) && (!empty($usuarioLogin)) && (!empty($senhaLogin)
 				<h2 class="form-signin-heading">Entrar</h2>
 				<input type="text" class="input-block-level" name="usuario" placeholder="Usuário">
 				<input type="password" class="input-block-level" name="senha" placeholder="Senha">
-				<label class="checkbox">
-					<input type="checkbox" value="remember-me"> Lembrar-me
-				</label>
+				<!--<label class="checkbox">
+					<input type="checkbox" value="lembrarLogin"> Lembrar-me
+				</label>-->
 				<button class="btn btn-large btn-primary" name="entrar" type="submit">Entrar</button>
 			</form>
 

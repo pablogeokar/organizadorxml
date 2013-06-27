@@ -31,17 +31,17 @@ arquivos xml.
 */
 $modoOperacao = 3;
 /* Diretorio onde ficam os xmls a serem organizados*/
-// Exemplo: $diretorioXML = "D:".DS."xampp".DS."htdocs".DS."organizaXML".DS."xmls";
+// Exemplo: $diretorioXML = 'D:\xampp\htdocs\nfe\xmls';
 $diretorioXML = "/diretorio/tal";
-/* Diretorio para onde irao os xmls organizados */
-// Exemplo: $diretorioDestinoXML = "D:".DS."xampp".DS."htdocs".DS."organizaXML".DS."xmls".DS."organizados";
+/* Diretorio para onde irao os xmls organizados caso o modo de operação não seja 3 */
+// Exemplo: $diretorioDestinoXML = 'D:\xampp\htdocs\nfe\xmls\organizados';
 $diretorioDestinoXML = "/diretorio/tal/organizados";
 /* Arquivo de log do script */
-// Exemplo: $arquivoLog = "D:".DS."xampp".DS."htdocs".DS."organizaXML".DS."organizados".DS."organizaXML.log";
+// Exemplo: $arquivoLog = 'D:\xampp\htdocs\nfe\xmls\organizados\organizaXML.log';
 $arquivoLog = "/var/log/organizaXML.log";
-/* Diretorio temporario para armazenar arquivos processados pelo script.
-Este diretorio sempre é deletado ao final do script */
-// Exemplo: $diretorioTemp = "C:".DS."Users".DS."Usuario".DS."AppData".DS."Local".DS."Temp".DS."organizaXML".date('dmYGis');
+/* Diretorio base onde serão criados diretórios temporarios para armazenar arquivos processados pelo script.
+Os diretórios cirados são deletados ao final do script */
+// Exemplo: $diretorioTemp = 'C:\Users\Usuario\AppData\Local\Temp';
 $diretorioTemp = sys_get_temp_dir();
 
 /* CNPJ ou CPF da empresa para a qual se deseja organizar os arquivos */

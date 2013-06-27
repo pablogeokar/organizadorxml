@@ -163,9 +163,11 @@ function organizaXML($arquivo) {
 
 		// Tratando informacoes das notas
 		$nomeEmitente = preg_replace('/ /', '-', $nomeEmitente);
+		$nomeEmitente = preg_replace('/\-\-/', '-', $nomeEmitente);
 		$nomeEmitente = preg_replace('/[^0-9A-Za-z\-]/', '', $nomeEmitente);
 		$nomeEmitente = strtoupper($nomeEmitente);
 		$nomeDestinatario = preg_replace('/ /', '-', $nomeDestinatario);
+		$nomeDestinatario = preg_replace('/\-\-/', '-', $nomeDestinatario);
 		$nomeDestinatario = preg_replace('/[^0-9A-Za-z\-]/', '', $nomeDestinatario);
 		$nomeDestinatario = strtoupper($nomeDestinatario);
 		preg_match('/([0-9]{4})-([0-9]{2})-([0-9]{2})/', $dataEmissaoNota,$retornosDataEmissao);
@@ -174,13 +176,13 @@ function organizaXML($arquivo) {
 		$diaEmissaoNota = $retornosDataEmissao[3];
 		// montando os destinos
 		if ($cnpjCpfEmitente == $cnpjCpfEmpresa) {
-			$diretorioDestino = $diretorioDestinoXML.DS."nfe".DS."saida".DS.$cnpjCpfDestinatario.DS.$anoEmissaoNota.DS.$mesEmissaoNota;
+			$diretorioDestino = $diretorioDestinoXML.DS."nfe".DS."saida".DS.$nomeDestinatario."_".$cnpjCpfDestinatario.DS.$anoEmissaoNota.DS.$mesEmissaoNota;
 		}
 		elseif ($cnpjCpfDestinatario == $cnpjCpfEmpresa) {
-			$diretorioDestino = $diretorioDestinoXML.DS."nfe".DS."entrada".DS.$cnpjCpfEmitente.DS.$anoEmissaoNota.DS.$mesEmissaoNota;
+			$diretorioDestino = $diretorioDestinoXML.DS."nfe".DS."entrada".DS.$nomeEmitente."_".$cnpjCpfEmitente.DS.$anoEmissaoNota.DS.$mesEmissaoNota;
 		} 
 		else {
-			$diretorioDestino = $diretorioDestinoXML.DS."nao_identificado".DS."nfe".DS.$cnpjCpfEmitente.DS.$anoEmissaoNota.DS.$mesEmissaoNota;
+			$diretorioDestino = $diretorioDestinoXML.DS."nao_identificado".DS."nfe".DS.$nomeEmitente."_".$cnpjCpfEmitente.DS.$anoEmissaoNota.DS.$mesEmissaoNota;
 		}
 		$arquivoDestino = $diaEmissaoNota."-".$mesEmissaoNota."-".$anoEmissaoNota."_".$numeroNota."_".$chaveNota.".xml";
 	} // fim do if para nfe
@@ -289,9 +291,11 @@ function organizaXML($arquivo) {
 		} else $chaveCte = $objetoDOM->getElementsByTagName('protCTe')->item(0)->getElementsByTagName('infProt')->item(0)->getElementsByTagName('chCTe')->item(0)->nodeValue;
 		// trato informacoes do cte
 		$nomeEmitente = preg_replace('/ /', '-', $nomeEmitente);
+		$nomeEmitente = preg_replace('/\-\-/', '-', $nomeEmitente);
 		$nomeEmitente = preg_replace('/[^0-9A-Za-z\-]/', '', $nomeEmitente);
 		$nomeEmitente = strtoupper($nomeEmitente);
 		$nomeDestinatario = preg_replace('/ /', '-', $nomeDestinatario);
+		$nomeDestinatario = preg_replace('/\-\-/', '-', $nomeDestinatario);
 		$nomeDestinatario = preg_replace('/[^0-9A-Za-z\-]/', '', $nomeDestinatario);
 		$nomeDestinatario = strtoupper($nomeDestinatario);
 		preg_match('/([0-9]{4})-([0-9]{2})-([0-9]{2})/', $dataEmissaoCte,$retornosDataEmissaoCte);
@@ -300,13 +304,13 @@ function organizaXML($arquivo) {
 		$diaEmissaoCte = $retornosDataEmissaoCte[3];
 		// montando os destinos
 		if ($cnpjCpfEmitente == $cnpjCpfEmpresa) {
-			$diretorioDestino = $diretorioDestinoXML.DS."cte".DS."saida".DS.$cnpjCpfDestinatario.DS.$anoEmissaoCte.DS.$mesEmissaoCte;
+			$diretorioDestino = $diretorioDestinoXML.DS."cte".DS."saida".DS.$nomeDestinatario."_".$cnpjCpfDestinatario.DS.$anoEmissaoCte.DS.$mesEmissaoCte;
 		}
 		elseif ($cnpjCpfDestinatario == $cnpjCpfEmpresa) {
-			$diretorioDestino = $diretorioDestinoXML.DS."cte".DS."entrada".DS.$cnpjCpfEmitente.DS.$anoEmissaoCte.DS.$mesEmissaoCte;
+			$diretorioDestino = $diretorioDestinoXML.DS."cte".DS."entrada".DS.$nomeEmitente."_".$cnpjCpfEmitente.DS.$anoEmissaoCte.DS.$mesEmissaoCte;
 		} 
 		else {
-			$diretorioDestino = $diretorioDestinoXML.DS."nao_identificado".DS."cte".DS.$cnpjCpfEmitente.DS.$anoEmissaoCte.DS.$mesEmissaoCte;
+			$diretorioDestino = $diretorioDestinoXML.DS."nao_identificado".DS."cte".DS.$nomeEmitente."_".$cnpjCpfEmitente.DS.$anoEmissaoCte.DS.$mesEmissaoCte;
 		}
 		$arquivoDestino = $diaEmissaoCte."-".$mesEmissaoCte."-".$anoEmissaoCte."_".$numeroCte."_".$chaveCte.".xml";
 	} // fim do if para cte
@@ -360,14 +364,16 @@ function organizaXML($arquivo) {
 	if ($tipoXML == 'nfe') {
 		$d = "$anoEmissaoNota-$mesEmissaoNota-$diaEmissaoNota";
 		$horaEmissaoNota = '00:00:00'; //somente o recibo tem hora
+		$nomeEmitenteBd = preg_replace('/\-/', ' ', $nomeEmitente);
+		$nomeDestinatarioBd = preg_replace('/\-/',' ',$nomeDestinatario);
 		if ($modoOperacao == 2) {
 			$queryInserir = "INSERT INTO nota_fiscal
-			(data_importacao,hora_importacao,data_emissao_nota,hora_emissao_nota,chave_nota,numero_nota,cnpj_cpf_emitente,cnpj_cpf_destinatario,caminho_relativo_arquivo)
-			VALUES ('$dataAtual','$horaAtual','$d','$horaEmissaoNota','$chaveNota','$numeroNota','$cnpjCpfEmitente','$cnpjCpfDestinatario','$caminhoRelativoArquivo')";
+			(data_importacao,hora_importacao,data_emissao_nota,hora_emissao_nota,chave_nota,numero_nota,cnpj_cpf_emitente,cnpj_cpf_destinatario,nome_emitente,nome_destinatario,caminho_relativo_arquivo)
+			VALUES ('$dataAtual','$horaAtual','$d','$horaEmissaoNota','$chaveNota','$numeroNota','$cnpjCpfEmitente','$cnpjCpfDestinatario','$nomeEmitenteBd','$nomeDestinatarioBd','$caminhoRelativoArquivo')";
 		} elseif ($modoOperacao == 3) {
 			$queryInserir = "INSERT INTO nota_fiscal
-			(data_importacao,hora_importacao,data_emissao_nota,hora_emissao_nota,chave_nota,numero_nota,cnpj_cpf_emitente,cnpj_cpf_destinatario,xml)
-			VALUES ('$dataAtual','$horaAtual','$d','$horaEmissaoNota','$chaveNota','$numeroNota','$cnpjCpfEmitente','$cnpjCpfDestinatario','$conteudoXMLArquivo')";
+			(data_importacao,hora_importacao,data_emissao_nota,hora_emissao_nota,chave_nota,numero_nota,cnpj_cpf_emitente,cnpj_cpf_destinatario,nome_emitente,nome_destinatario,xml)
+			VALUES ('$dataAtual','$horaAtual','$d','$horaEmissaoNota','$chaveNota','$numeroNota','$cnpjCpfEmitente','$cnpjCpfDestinatario','$nomeEmitenteBd','$nomeDestinatarioBd','$conteudoXMLArquivo')";
 		}
 		$queryBuscar = "SELECT id FROM nota_fiscal WHERE chave_nota = '$chaveNota'";
 		$queryDeletar = "DELETE FROM nota_fiscal WHERE id = :id";
@@ -392,14 +398,16 @@ function organizaXML($arquivo) {
 		$d = "$anoEmissaoCte-$mesEmissaoCte-$diaEmissaoCte";
 		preg_match('/([0-9]{2}):([0-9]{2}):([0-9]{2})/', $dataEmissaoCte,$horaEmissaoCte);
 		$horaEmissaoCte = $horaEmissaoCte[0];
+		$nomeEmitenteBd = preg_replace('/\-/', ' ', $nomeEmitente);
+		$nomeDestinatarioBd = preg_replace('/\-/',' ',$nomeDestinatario);
 		if ($modoOperacao == 2) {
 			$queryInserir = "INSERT INTO conhecimento_transporte
-			(data_importacao,hora_importacao,data_emissao_conhecimento,hora_emissao_conhecimento,chave_conhecimento,numero_conhecimento,cnpj_cpf_emitente,cnpj_cpf_destinatario,caminho_relativo_arquivo)
-			VALUES ('$dataAtual','$horaAtual','$d','$horaEmissaoCte','$chaveCte','$numeroCte','$cnpjCpfEmitente','$cnpjCpfDestinatario','$caminhoRelativoArquivo')";
+			(data_importacao,hora_importacao,data_emissao_conhecimento,hora_emissao_conhecimento,chave_conhecimento,numero_conhecimento,cnpj_cpf_emitente,cnpj_cpf_destinatario,'nome_emitente','nome_destinatario',caminho_relativo_arquivo)
+			VALUES ('$dataAtual','$horaAtual','$d','$horaEmissaoCte','$chaveCte','$numeroCte','$cnpjCpfEmitente','$cnpjCpfDestinatario','$nomeEmitenteBd','$nomeDestinatarioBd','$caminhoRelativoArquivo')";
 		} elseif($modoOperacao == 3) {
 			$queryInserir = "INSERT INTO conhecimento_transporte
-			(data_importacao,hora_importacao,data_emissao_conhecimento,hora_emissao_conhecimento,chave_conhecimento,numero_conhecimento,cnpj_cpf_emitente,cnpj_cpf_destinatario,xml)
-			VALUES ('$dataAtual','$horaAtual','$d','$horaEmissaoCte','$chaveCte','$numeroCte','$cnpjCpfEmitente','$cnpjCpfDestinatario','$conteudoXMLArquivo')";
+			(data_importacao,hora_importacao,data_emissao_conhecimento,hora_emissao_conhecimento,chave_conhecimento,numero_conhecimento,cnpj_cpf_emitente,cnpj_cpf_destinatario,nome_emitente,nome_destinatario,xml)
+			VALUES ('$dataAtual','$horaAtual','$d','$horaEmissaoCte','$chaveCte','$numeroCte','$cnpjCpfEmitente','$cnpjCpfDestinatario','$nomeEmitenteBd','$nomeDestinatarioBd','$conteudoXMLArquivo')";
 		}
 		$queryBuscar = "SELECT id FROM conhecimento_transporte WHERE chave_conhecimento = '$chaveCte'";
 		$queryDeletar = "DELETE FROM conhecimento_transporte WHERE id = :id";
@@ -601,7 +609,7 @@ require_once('libs/nfephp/libs/ToolsNFePHP.class.php');
 *      Baixa os xmls nos e-mails
 **************************************/
 if (! extension_loaded('imap')) {
-	logar("[alerta 070] modulo imap nao carregado");
+	logar("[alerta 070] modulo imap nao carregado. E-mails nao serao verificados");
 }
 else {
 	if ( ! $caixaEntrada = imap_open($emailStringConexao, $emailUsuario, $emailSenha) ) {

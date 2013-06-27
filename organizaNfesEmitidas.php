@@ -121,7 +121,7 @@ $continuacao = 1;
 while ($continuacao == 1) {
 	/* (pag 14) Amensagemserádescartadaseotamanhoexcederolimiteprevisto(10KB). */
 	if (!$xml = $objetoNfe->getListNFe($AN, $indNFe, $indEmi, $ultNSU, $tpAmb, $modSOAP, $retorno)) {
-		logar("[erro 001] durante a obtencao da listagem das notas fiscais. Detalhes: " . $objetoNfe->errMsg . " " . $objetoNfe->soapDebug);
+		logar("[erro 001] durante a obtencao da listagem das notas fiscais. Detalhes: " . $objetoNfe->errMsg);
 		sair();
 	}
 	//header('Content-type: text/xml; charset=UTF-8');

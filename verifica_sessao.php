@@ -23,9 +23,20 @@ $pathScript = obtemPathScript();
 if ((!isset($modoLogin)) || (empty($modoLogin)) || ((strtolower($modoLogin) != 'ldap') && (strtolower($modoLogin) != 'banco'))) {
 	//
 } else {
-	session_cache_expire(120);
 	session_start("organizadorxml");
+	
 	if (empty($_SESSION['usuario'])) {
-		header("Location: {$pathScript}login.php?msg=valores");
+		header("Location: {$pathScript}login.php?msg=login");
+	}
+	else {
+		$segundosTimeout = 60 * 60; // 1 hora
+		if (isset($_SESSION['timeout'])) {
+			$tempoDecorridoSessao = time() - $_SESSION['timeout'];
+			if ($tempoDecorridoSessao > $segundosTimeout) {
+				session_destroy();
+				header("Location: {$pathScript}login.php?msg=timeout");
+			}
+		}
+		$_SESSION['timeout'] = time();
 	}
 }

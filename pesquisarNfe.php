@@ -174,8 +174,8 @@ if (isset($_POST) && isset($_POST['enviar'])) {
 								print "<td>" . date('d/m/Y', strtotime($resultado['data_emissao_nota'])) . "</td>";
 								print "<td>" . $resultado['chave_nota'] . "</td>";
 								print "<td>" . $resultado['numero_nota'] . "</td>";
-								print "<td><a href=consultarCadastro.php?cnpjCpf=" . $resultado['cnpj_cpf_emitente'] . ">" . $resultado['cnpj_cpf_emitente'] . "</a>";
-								print "<td><a href=consultarCadastro.php?cnpjCpf=" . $resultado['cnpj_cpf_destinatario'] . ">" . $resultado['cnpj_cpf_destinatario'] . "</a>";
+								print "<td><a title='{$resultado['nome_emitente']}' href=consultarCadastro.php?cnpjCpf=" . $resultado['cnpj_cpf_emitente'] . ">" . $resultado['cnpj_cpf_emitente'] . "</a>";
+								print "<td><a title='{$resultado['nome_destinatario']}' href=consultarCadastro.php?cnpjCpf=" . $resultado['cnpj_cpf_destinatario'] . ">" . $resultado['cnpj_cpf_destinatario'] . "</a>";
 								print "<td><a alt='Download' title='Download' href=download.php?tipo=nfe&id=" . $resultado['id'] . "><i class='icon-download-alt'</i></a>";
 								print "<td><a alt='Imprimir' title='Imprimir' target='_blank' href=imprimir.php?tipo=nfe&id=" . $resultado['id'] . "><i class='icon-print'</i></a>";
 								print "</tr>";

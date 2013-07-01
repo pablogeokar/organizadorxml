@@ -189,6 +189,8 @@ function organizaXML($arquivo) {
 	// codigo 110110 para o campo tpEvento definido na pagina 77 do manual da receita, versao 5.0
 	//elseif( (is_object($objetoDOM->getElementsByTagName('envEvento')->item(0)->getElementsByTagName('evento')->item(0)->getElementsByTagName('infEvento')->item(0)->getElementsByTagName('tpEvento')->item(0)))
 	elseif( (is_object($objetoDOM->getElementsByTagName('tpEvento')->item(0)))
+		&& (is_object($objetoDOM->getElementsByTagName('envEvento')->item(0)))
+		&& (is_object($objetoDOM->getElementsByTagName('envEvento')->item(0)->getElementsByTagName('evento')))
 		&& ($objetoDOM->getElementsByTagName('envEvento')->item(0)->getElementsByTagName('evento')->item(0)->getElementsByTagName('infEvento')->item(0)->getElementsByTagName('tpEvento')->item(0)->nodeValue == '110110') ) {
 		// o xml é de uma carta de correção. Obtenho informações da carta
 		$tipoXML = 'cce';
@@ -314,6 +316,54 @@ function organizaXML($arquivo) {
 		}
 		$arquivoDestino = $diaEmissaoCte."-".$mesEmissaoCte."-".$anoEmissaoCte."_".$numeroCte."_".$chaveCte.".xml";
 	} // fim do if para cte
+	// cancelamento de nota fiscal
+	else if ( (is_object($objetoDOM->getElementsByTagName('tpEvento')->item(0)))
+		&& (is_object($objetoDOM->getElementsByTagName('evento')->item(0)))
+		&& (is_object($objetoDOM->getElementsByTagName('evento')->item(0)->getElementsByTagName('infEvento')))
+		&& ($objetoDOM->getElementsByTagName('evento')->item(0)->getElementsByTagName('infEvento')->item(0)->getElementsByTagName('tpEvento')->item(0)->nodeValue == '110111' ) ){
+		$tipoXML = 'cancelamento';
+		
+		$infEvento = $objetoDOM->getElementsByTagName('evento')->item(0)->getElementsByTagName('infEvento')->item(0);
+		$codigoOrgao = $infEvento->getElementsByTagName('cOrgao')->item(0)->nodeValue;
+		if (!isset($infEvento->getElementsByTagName('CNPJ')->item(0)->nodeValue)) {
+			if (!isset($infEvento->getElementsByTagName('CPF')->item(0)->nodeValue)) {
+				logar ("[alerta ] nao foi possivel extrair o CNPJ ou CPF do arquivo '$arquivo'");
+				return FALSE;
+			} else $infEvento->getElementsByTagName('CPF')->item(0)->nodeValue;
+		} else $cnpjCpfEmitente = $infEvento->getElementsByTagName('CNPJ')->item(0)->nodeValue;
+		$chaveNota = $infEvento->getElementsByTagName('chNFe')->item(0)->nodeValue;
+		$dataHoraEvento = $infEvento->getElementsByTagName('dhEvento')->item(0)->nodeValue;
+		$numeroProtocolo = $infEvento->getElementsByTagName('detEvento')->item(0)->getElementsByTagName('nProt')->item(0)->nodeValue;
+		$justificativaCancelamento = $infEvento->getElementsByTagName('detEvento')->item(0)->getElementsByTagName('xJust')->item(0)->nodeValue;
+		if (!isset($objetoDOM->getElementsByTagName('retEvento')->item(0)->getElementsByTagName('CNPJDest')->item(0)->nodeValue)) {
+			if (!isset($objetoDOM->getElementsByTagName('retEvento')->item(0)->getElementsByTagName('CPFDest')->item(0)->nodeValue)) {
+				logar ("[alerta ] nao foi possivel extrair o CNPJ ou CPF do arquivo '$arquivo'");
+				return FALSE;
+			} else $objetoDOM->getElementsByTagName('retEvento')->item(0)->getElementsByTagName('CPFDest')->item(0)->nodeValue;
+		} else $cnpjCpfDestinatario = $objetoDOM->getElementsByTagName('retEvento')->item(0)->getElementsByTagName('CNPJDest')->item(0)->nodeValue;
+		
+		$dataHoraEvento = preg_match('/([0-9]{4})\-([0-9]{2})\-([0-9]{2})[A-Za-z]([0-9]{2})\:([0-9]{2})\:([0-9]{2})/', $dataHoraEvento, $dataHoraEventoRegex);
+		$anoEmissaoCanc =		$dataHoraEventoRegex[1];
+		$mesEmissaoCanc =		$dataHoraEventoRegex[2];
+		$diaEmissaoCanc =		$dataHoraEventoRegex[3];
+		$horaEmissaoCanc =		$dataHoraEventoRegex[4];
+		$minutoEmissaoCanc =	$dataHoraEventoRegex[5];
+		$segundoEmissaoCanc =	$dataHoraEventoRegex[6];
+		$dataCancelamento =		"$anoEmissaoCanc-$mesEmissaoCanc-$diaEmissaoCanc";
+		$horaCancelamento =		"$horaEmissaoCanc:$minutoEmissaoCanc:$segundoEmissaoCanc";
+		
+		// montando os destinos
+		if ($cnpjCpfEmitente == $cnpjCpfEmpresa) {
+			$diretorioDestino = $diretorioDestinoXML.DS."cancelamento".DS."saida".DS.$cnpjCpfDestinatario.DS.$anoEmissaoCanc.DS.$mesEmissaoCanc;
+		}
+		elseif ($cnpjCpfDestinatario == $cnpjCpfEmpresa) {
+			$diretorioDestino = $diretorioDestinoXML.DS."cancelamento".DS."entrada".DS.$cnpjCpfEmitente.DS.$anoEmissaoCanc.DS.$mesEmissaoCanc;
+		} 
+		else {
+			$diretorioDestino = $diretorioDestinoXML.DS."nao_identificado".DS."cancelamento".DS.$cnpjCpfEmitente.DS.$anoEmissaoCanc.DS.$mesEmissaoCanc;
+		}
+		$arquivoDestino = $diaEmissaoCanc."-".$mesEmissaoCanc."-".$anoEmissaoCanc."_".$chaveNota.".xml";
+	} //fim do if para cancelamento
 	else {
 		logar("[aviso 056] xml '$arquivo' nao identificado");
 		$tipoXML = 'nao_identificado';
@@ -411,6 +461,20 @@ function organizaXML($arquivo) {
 		}
 		$queryBuscar = "SELECT id FROM conhecimento_transporte WHERE chave_conhecimento = '$chaveCte'";
 		$queryDeletar = "DELETE FROM conhecimento_transporte WHERE id = :id";
+	}
+	elseif ($tipoXML == 'cancelamento') {
+		if ($modoOperacao == 2) {
+			$queryInserir = "INSERT INTO cancelamento
+			(data_importacao,hora_importacao,codigo_orgao,cnpj_cpf_emitente,chave_nfe,data_cancelamento,hora_cancelamento,numero_protocolo,justificativa_cancelamento,cnpj_cpf_destinatario,caminho_relativo_arquivo)
+			VALUES ('$dataAtual','$horaAtual','$codigoOrgao','$cnpjCpfEmitente','$chaveNota','$dataCancelamento','$horaCancelamento','$numeroProtocolo','$justificativaCancelamento','$cnpjCpfDestinatario','$caminhoRelativoArquivo')";
+		}
+		elseif ($modoOperacao == 3) {
+			$queryInserir = "INSERT INTO cancelamento
+			(data_importacao,hora_importacao,codigo_orgao,cnpj_cpf_emitente,chave_nfe,data_cancelamento,hora_cancelamento,numero_protocolo,justificativa_cancelamento,cnpj_cpf_destinatario,xml)
+			VALUES ('$dataAtual','$horaAtual','$codigoOrgao','$cnpjCpfEmitente','$chaveNota','$dataCancelamento','$horaCancelamento','$numeroProtocolo','$justificativaCancelamento','$cnpjCpfDestinatario','$conteudoXMLArquivo')";
+		}
+		$queryBuscar = "SELECT id FROM cancelamento WHERE chave_nfe = '$chaveNota'";
+		$queryDeletar = "DELETE FROM cancelamento WHERE id = :id";
 	}
 	elseif ($tipoXML == 'nao_identificado') {
 		$d = basename($arquivo);

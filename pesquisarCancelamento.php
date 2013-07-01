@@ -28,24 +28,23 @@ if ((!isset($modoOperacao)) || (is_null($modoOperacao)) || (!is_numeric($modoOpe
 }
 $resultados = 0;
 if (isset($_POST) && isset($_POST['enviar'])) {
-	$dataInicialLancamento =		date('Y-m-d',strtotime($_POST['data_inicial_lancamento']));
-	$dataFinalLancamento =		date('Y-m-d',strtotime($_POST['data_final_lancamento']));
-	$cnpjCpfEmitente =			filter_input(INPUT_POST,'cnpj_cpf_emitente',FILTER_SANITIZE_NUMBER_INT);
-	$cnpjCpfDestinatario =		filter_input(INPUT_POST,'cnpj_cpf_destinatario',FILTER_SANITIZE_NUMBER_INT);
-	$numeroCte =				filter_input(INPUT_POST,'numero_cte',FILTER_SANITIZE_NUMBER_INT);
-	$chaveCte =				filter_input(INPUT_POST,'chave_cte',FILTER_SANITIZE_NUMBER_INT);
+	$dataInicialLancamento =		date('Y-m-d', strtotime($_POST['data_inicial_lancamento']));
+	$dataFinalLancamento =		date('Y-m-d', strtotime($_POST['data_final_lancamento']));
+	$cnpjCpfEmitente =			filter_input(INPUT_POST, 'cnpj_cpf_emitente', FILTER_SANITIZE_NUMBER_INT);
+	$cnpjCpfDestinatario =		filter_input(INPUT_POST, 'cnpj_cpf_destinatario', FILTER_SANITIZE_NUMBER_INT);
+	$numeroProtocolo =			filter_input(INPUT_POST, 'numero_protocolo', FILTER_SANITIZE_NUMBER_INT);
+	$chaveNota =				filter_input(INPUT_POST, 'chave_nota', FILTER_SANITIZE_NUMBER_INT);
 	$campos = array();
-	if ( (isset($dataInicialLancamento)) && ($dataInicialLancamento == '1969-12-31')) $dataInicialLancamento = null;
-	if ( (isset($dataFinalLancamento)) && ($dataFinalLancamento == '1969-12-31')) $dataFinalLancamento = null;
-	if (isset($dataInicialLancamento) && !empty($dataInicialLancamento) ) $campos += array('data_emissao_conhecimento >=' => $dataInicialLancamento);
-	if (isset($dataFinalLancamento) && !empty($dataFinalLancamento) ) $campos += array('data_emissao_conhecimento <=' => $dataFinalLancamento);
+	if ((isset($dataInicialLancamento)) && ($dataInicialLancamento == '1969-12-31')) $dataInicialLancamento = null;
+	if ((isset($dataFinalLancamento)) && ($dataFinalLancamento == '1969-12-31')) $dataFinalLancamento = null;
+	if (isset($dataInicialLancamento) && !empty($dataInicialLancamento)) $campos += array('data_cancelamento >=' => $dataInicialLancamento);
+	if (isset($dataFinalLancamento) && !empty($dataFinalLancamento)) $campos += array('data_cancelamento <=' => $dataFinalLancamento);
 	if (isset($cnpjCpfEmitente) && !empty($cnpjCpfEmitente)) $campos += array('cnpj_cpf_emitente =' => $cnpjCpfEmitente);
 	if (isset($cnpjCpfDestinatario) && !empty($cnpjCpfDestinatario)) $campos += array('cnpj_cpf_destinatario =' => $cnpjCpfDestinatario);
-	if (isset($numeroCte) && !empty($numeroNfe)) $campos += array('numero_conhecimento =' => $numeroNfe);
-	if (isset($chaveCte) && !empty($chaveNfe)) $campos += array('chave_conhecimento =' => $chaveNfe);
-	$queryBuscar = "SELECT * FROM conhecimento_transporte WHERE 1";
-	if (empty($campos))
-		$queryBuscar = $queryBuscar . "=2";
+	if (isset($numeroProtocolo) && !empty($numeroProtocolo)) $campos += array('numero_protocolo =' => $numeroProtocolo);
+	if (isset($chaveNota) && !empty($chaveNota)) $campos += array('chave_nota =' => $chaveNota);
+	$queryBuscar = "SELECT * FROM cancelamento WHERE 1";
+	if (empty($campos)) $queryBuscar = $queryBuscar . "=2";
 	foreach ($campos as $campo => $valor) {
 		$nomeCampo = explode(' ', $campo);
 		$queryBuscar = $queryBuscar . " AND $nomeCampo[0] $nomeCampo[1] '$valor'";
@@ -61,7 +60,7 @@ if (isset($_POST) && isset($_POST['enviar'])) {
 <html lang="pt-br">
 	<head>
 		<meta charset="utf-8">
-		<title>Pesquisar conhecimento de transporte eletrônico</title>
+		<title>Pesquisar cancelamento de nota fiscal eletrônica</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<meta name="description" content="organizador xml">
 		<meta name="author" content="Tobias<tobiasette@gmail.com>">
@@ -118,7 +117,7 @@ if (isset($_POST) && isset($_POST['enviar'])) {
 			<?php if ((isset($erro)) && (!empty($erro))) die($erro); ?>
 
 			<form name="pesquisar" id="pesquisar" class="form-inline" method="post">
-				<legend>Pesquisar conhecimento de transporte</legend>
+				<legend>Pesquisar cancelamento de nota fiscal eletrônica</legend>
 
 				<p>
 				<div class="input-append date div_data" id="div_data_inicial">
@@ -138,11 +137,11 @@ if (isset($_POST) && isset($_POST['enviar'])) {
 				</p>
 
 				<p>
-					<input type="text" class="span6" name="numero_cte" placeholder="Número cte">
+					<input type="text" class="span6" name="numero_protocolo" placeholder="Número protocolo">
 				</p>
 
 				<p>
-					<input type="text" class="span6" name="chave_cte" placeholder="Chave cte">
+					<input type="text" class="span6" name="chave_nota" placeholder="Chave nfe">
 				</p>
 
 				<div class="form-actions">
@@ -163,39 +162,38 @@ if (isset($_POST) && isset($_POST['enviar'])) {
 							<tr>
 								<th>Data emissão</th>
 								<th>Chave</th>
-								<th>Número</th>
 								<th>Emitente</th>
 								<th>Destinatário</th>
-								<th colspan="2">Opções</th>
+								<th>Justificativa cancelamento</th>
+								<th colspan="1">Opções</th>
 							</tr>
 						</thead>
 						<tbody>
 							<?php
 							foreach ($resultados as $resultado) {
 								print "<tr>";
-								print "<td>" . date('d/m/Y', strtotime($resultado['data_emissao_conhecimento'])) . "</td>";
-								print "<td>" . $resultado['chave_conhecimento'] . "</td>";
-								print "<td>" . $resultado['numero_conhecimento'] . "</td>";
-								print "<td><a title='{$resultado['nome_emitente']}' href=consultarCadastro.php?cnpjCpf=" . $resultado['cnpj_cpf_emitente'] . ">" . $resultado['cnpj_cpf_emitente'] . "</a>";
-								print "<td><a title='{$resultado['nome_destinatario']}' href=consultarCadastro.php?cnpjCpf=" . $resultado['cnpj_cpf_destinatario'] . ">" . $resultado['cnpj_cpf_destinatario'] . "</a>";
-								print "<td><a alt='Download' title='Download' href=download.php?tipo=cte&id=" . $resultado['id'] . "><i class='icon-download-alt'</i></a>";
-								print "<td><a alt='Imprimir' title='Imprimir' target='_blank' href=imprimir.php?tipo=cte&id=" . $resultado['id'] . "><i class='icon-print'</i></a>";
+								print "<td>" . date('d/m/Y', strtotime($resultado['data_cancelamento'])) . "</td>";
+								print "<td>" . $resultado['chave_nota'] . "</td>";
+								print "<td><a href=consultarCadastro.php?cnpjCpf=" . $resultado['cnpj_cpf_emitente'] . ">" . $resultado['cnpj_cpf_emitente'] . "</a>";
+								print "<td><a href=consultarCadastro.php?cnpjCpf=" . $resultado['cnpj_cpf_destinatario'] . ">" . $resultado['cnpj_cpf_destinatario'] . "</a>";
+								print "<td>" . $resultado['justificativa_cancelamento'] . "</td>";
+								print "<td><a alt='Download' title='Download' href=download.php?tipo=cancelamento&id=" . $resultado['id'] . "><i class='icon-download-alt'</i></a>";
 								print "</tr>";
 							}
 							?>
 						</tbody>
 					</table>
 					<hr>
-				<?php print "<a class='btn btn-success' href='download.php?tipo=cte
+			<?php print "<a class='btn btn-success' href='download.php?tipo=cancelamento
 &dataInicialLancamento=$dataInicialLancamento&dataFinalLancamento=$dataFinalLancamento&cnpjCpfEmitente=$cnpjCpfEmitente
-&cnpjCpfDestinatario=$cnpjCpfDestinatario&numeroNfe=$numeroCte&chaveNfe=$chaveCte'
+&cnpjCpfDestinatario=$cnpjCpfDestinatario&numeroProtocolo=$numeroProtocolo&chaveNfe=$chaveNota'
 >Download de todos os xmls desta pesquisa</a>"; ?>
-				<?php elseif ((is_object($resultados)) && ($resultados->rowCount() == 0)) : ?>
+			<?php elseif ((is_object($resultados)) && ($resultados->rowCount() == 0)) : ?>
 					<div class="alert alert-error">
 						<button type="button" class="close" data-dismiss="alert">&times;</button>
 						<strong>Nenhum</strong> resultado encontrado.
 					</div>
-				<?php endif; ?>
+			<?php endif; ?>
 			</div>
 
 			<hr>

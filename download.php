@@ -32,14 +32,14 @@ try {
 
 $tipoArquivo = strtolower(filter_input(INPUT_GET, 'tipo', FILTER_SANITIZE_STRING));
 $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
-// atributos comum a nfe, cte e cce
+// atributos comum a nfe, cte, cce e cancelamento
 $dataInicialLancamento = date('Y-m-d', strtotime($_GET['dataInicialLancamento']));
 $dataFinalLancamento = date('Y-m-d', strtotime($_GET['dataFinalLancamento']));
 $cnpjCpfEmitente = filter_input(INPUT_GET, 'cnpjCpfEmitente', FILTER_SANITIZE_NUMBER_INT);
 $cnpjCpfDestinatario = filter_input(INPUT_GET, 'cnpjCpfDestinatario', FILTER_SANITIZE_NUMBER_INT);
 // nfe
-$numeroNfe = filter_input(INPUT_GET, 'numeroFfe', FILTER_SANITIZE_NUMBER_INT);
-$chaveNfe = filter_input(INPUT_GET, 'chaveFfe', FILTER_SANITIZE_NUMBER_INT); // nfe e cce
+$numeroNfe = filter_input(INPUT_GET, 'numeroNfe', FILTER_SANITIZE_NUMBER_INT);
+$chaveNfe = filter_input(INPUT_GET, 'chaveNfe', FILTER_SANITIZE_NUMBER_INT); // nfe, cce e cancelamento
 // cte
 $numeroCte = filter_input(INPUT_GET, 'numeroCte', FILTER_SANITIZE_NUMBER_INT);
 $chaveCte = filter_input(INPUT_GET, 'chaveCte', FILTER_SANITIZE_NUMBER_INT);
@@ -51,6 +51,8 @@ $nomeArquivo = filter_input(INPUT_GET, 'nome_arquivo', FILTER_SANITIZE_STRING);
 $dataInicialRegistro = date('Y-m-d', strtotime($_GET['data_inicial_registro']));
 $dataFinalRegistro = date('Y-m-d', strtotime($_GET['data_inicial_registro']));
 $tipoArquivoInvalido = filter_input(INPUT_GET, 'tipo_arquivo', FILTER_SANITIZE_STRING);
+// cancelamento
+$numeroProtocolo = filter_input(INPUT_GET, 'numeroProtocolo', FILTER_SANITIZE_NUMBER_INT);
 // variavel global
 $diretorioTemp = $diretorioTemp . DS . "organizaXML-download-" . date('dmYGis');
 //checagens
@@ -290,6 +292,79 @@ switch ($tipoArquivo) {
 				}
 			} elseif ($modoOperacao == 3) {
 				$queryBuscar = "SELECT chave_nota,xml FROM carta_correcao WHERE 1";
+				if (empty($campos))
+					$queryBuscar = $queryBuscar . "=2";
+				foreach ($campos as $campo => $valor) {
+					$nomeCampo = explode(' ', $campo);
+					$queryBuscar = $queryBuscar . " AND $nomeCampo[0] $nomeCampo[1] '$valor'";
+				}
+				$resultados = $objetoPDO->query($queryBuscar);
+				if (!$resultados)
+					die("<script type='text/javascript'>alert('Nenhum resultado encontrado');history.go(-1)</script>");
+				$arquivos = array();
+				foreach ($resultados as $resultado) {
+					$chave = $resultado['chave_nota'];
+					$xml = $resultado['xml'];
+					file_put_contents($diretorioTemp . DS . $chave . ".xml", $xml);
+					$arquivos[] = $diretorioTemp . DS . $chave . ".xml";
+				}
+			}
+			if (empty($arquivos))
+				die("<script type='text/javascript'>alert('Nao ha arquivos para compactar');history.go(-1)</script>");
+			if (($arquivoFinal = gerarZip($arquivos)) === false)
+				die("<script type='text/javascript'>alert('Erro ao compactar arquivos');history.go(-1)</script>");
+			enviarParaDownload($arquivoFinal);
+		}
+		break;
+		
+	case 'cancelamento':
+		if (!empty($id)) {
+			if ($modoOperacao == 2) {
+				$busca = $objetoPDO->query("SELECT caminho_relativo_arquivo FROM cancelamento WHERE id = '$id'");
+				if ($busca->rowCount() < 1)
+					die("<script type='text/javascript'>alert('Arquivo nao econtrado');history.go(-1)</script>");
+				$caminhoRelativo = $busca->fetch(PDO::FETCH_OBJ)->caminho_relativo_arquivo;
+				$caminhoRelativo = preg_replace('/\$DS/', DS, $caminhoRelativo);
+				$local = $diretorioDestinoXML . DS . $caminhoRelativo;
+			}
+			elseif ($modoOperacao == 3) {
+				$busca = $objetoPDO->query("SELECT chave_nota,xml FROM cancelamento WHERE id = '$id'");
+				if ($busca->rowCount() < 1)
+					die("<script type='text/javascript'>alert('Arquivo nao econtrado');history.go(-1)</script>");
+				$busca = $busca->fetch(PDO::FETCH_OBJ);
+				$chave = $busca->chave_nota;
+				$xml = $busca->xml;
+				file_put_contents($diretorioTemp . DS . $chave . ".xml", $xml);
+				$local = $diretorioTemp . DS . $chave . ".xml";
+			}
+			enviarParaDownload($local);
+		}
+		else {
+			$campos = array();
+			if (isset($dataInicialLancamento) && !empty($dataInicialLancamento)) $campos += array('data_cancelamento >=' => $dataInicialLancamento);
+			if (isset($dataFinalLancamento) && !empty($dataFinalLancamento))	$campos += array('data_cancelamento <=' => $dataFinalLancamento);
+			if (isset($cnpjCpfEmitente) && !empty($cnpjCpfEmitente)) $campos += array('cnpj_cpf_emitente =' => $cnpjCpfEmitente);
+			if (isset($cnpjCpfDestinatario) && !empty($cnpjCpfDestinatario)) $campos += array('cnpj_cpf_destinatario =' => $cnpjCpfDestinatario);
+			if (isset($numeroProtocolo) && !empty($numeroProtocolo)) $campos += array('numero_protocolo =' => $numeroProtocolo);
+			if (isset($chaveNfe) && !empty($chaveNfe)) $campos += array('chave_nota =' => $chaveNfe);
+			if ($modoOperacao == 2) {
+				$queryBuscar = "SELECT caminho_relativo_arquivo FROM cancelamento WHERE 1";
+				if (empty($campos)) $queryBuscar = $queryBuscar . "=2";
+				foreach ($campos as $campo => $valor) {
+					$nomeCampo = explode(' ', $campo);
+					$queryBuscar = $queryBuscar . " AND $nomeCampo[0] $nomeCampo[1] '$valor'";
+				}
+				$resultados = $objetoPDO->query($queryBuscar);
+				if (!$resultados)
+					die("<script type='text/javascript'>alert('Nenhum resultado encontrado');history.go(-1)</script>");
+				$arquivos = array();
+				foreach ($resultados as $resultado) {
+					$caminhoRelativo = $resultado['caminho_relativo_arquivo'];
+					$caminhoRelativo = preg_replace('/\$DS/', DS, $caminhoRelativo);
+					$arquivos[] = $diretorioDestinoXML . DS . $caminhoRelativo;
+				}
+			} elseif ($modoOperacao == 3) {
+				$queryBuscar = "SELECT chave_nota,xml FROM cancelamento WHERE 1";
 				if (empty($campos))
 					$queryBuscar = $queryBuscar . "=2";
 				foreach ($campos as $campo => $valor) {

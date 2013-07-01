@@ -106,7 +106,7 @@ switch ($tipoArquivo) {
 		$cce = new DacceNFePHP($local, 'P', 'A4', null, 'I', $aEnd, '', 'Times', 1);
 		$teste = $cce->printCCe('cce.pdf', 'I');
 		break;
-
+		
 	default:
 		die("<script type='text/javascript'>alert('Tipo de arquivo não especificado')</script>");
 		break;

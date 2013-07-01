@@ -90,8 +90,9 @@ if (isset($_GET['data_inicial_registro']) || isset($_GET['data_final_registro'])
 						<a data-toggle="dropdown" class="dropdown-toggle" href="#">Pesquisar <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a href="pesquisarNfe.php">Nota fiscal</a></li>
-							<li><a href="pesquisarCte.php">Conhecimento de transporte</a></li>
 							<li><a href="pesquisarCce.php">Carta de correção</a></li>
+							<li><a href="pesquisarCancelamento.php">Cancelamento</a></li>
+							<li><a href="pesquisarCte.php">Conhecimento de transporte</a></li>
 							<li><a href="pesquisarNaoIdentificados.php">XMLs não identificados</a></li>
 							<li><a href="pesquisarInvalidos.php">XMLs não validados</a></li>
 							<li><a href="pesquisarNfesEmitidas.php">Notas fiscais emitidas para esta empresa</a></li>

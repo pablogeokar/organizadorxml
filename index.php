@@ -63,8 +63,9 @@ if ((!isset($modoOperacao)) || (is_null($modoOperacao)) || (!is_numeric($modoOpe
 						<a data-toggle="dropdown" class="dropdown-toggle" href="#">Pesquisar <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a href="pesquisarNfe.php">Nota fiscal</a></li>
-							<li><a href="pesquisarCte.php">Conhecimento de transporte</a></li>
 							<li><a href="pesquisarCce.php">Carta de correção</a></li>
+							<li><a href="pesquisarCancelamento.php">Cancelamento</a></li>
+							<li><a href="pesquisarCte.php">Conhecimento de transporte</a></li>
 							<li><a href="pesquisarNaoIdentificados.php">XMLs não identificados</a></li>
 							<li><a href="pesquisarInvalidos.php">XMLs não validados</a></li>
 							<li><a href="pesquisarNfesEmitidas.php">Notas fiscais emitidas para esta empresa</a></li>
@@ -89,24 +90,25 @@ if ((!isset($modoOperacao)) || (is_null($modoOperacao)) || (!is_numeric($modoOpe
 
 			<div class="jumbotron">
 				<h1>Organizador de arquivos xml</h1>
-				<p class="lead">Organiza arquivos de nota fiscal, conhecimento de transporte e carta de correção</p>
+				<p class="lead">Organiza arquivos de nota fiscal, carta de correção, cancelamento e conhecimento de transporte</p>
 				<a class="btn btn-large btn-success" href="pesquisarNfe.php">Pesquisar NFe</a>
-				<a class="btn btn-large btn-info" href="pesquisarCte.php">Pesquisar CTe</a>
+				<a class="btn btn-large btn-danger" href="pesquisarCancelamento.php">Pesquisar Cancelamento</a>
 				<a class="btn btn-large btn-warning" href="pesquisarCce.php">Pesquisar CCe</a>
+				<a class="btn btn-large btn-info" href="pesquisarCte.php">Pesquisar CTe</a>
 			</div>
 
 			<hr>
 
 			<div class="row-fluid marketing">
 				<div class="span6">
-					<h4>Notas fiscais</h4>
+					<h4>Nota fiscal</h4>
 					<?php
 					$consulta = $objetoPDO->query("SELECT COUNT(id) FROM nota_fiscal");
 					if (!$consulta) $mensagem = "Oooops! Ocorreu um erro ao realizar a consulta ao banco de dados";
 					else {
 						$r = $consulta->fetch(PDO::FETCH_ASSOC);
 						if ($r['COUNT(id)'] == 0) $mensagem = "Não há notas fiscais armazenadas.";
-						else	$mensagem = "Há " . $r['COUNT(id)'] . " notas fiscais armazenadas.";
+						else	$mensagem = "Há " . $r['COUNT(id)'] . " nota(s) fiscal(is) armazenada(s).";
 					}
 					?>
 					<p><?php print $mensagem; ?></p>
@@ -118,7 +120,19 @@ if ((!isset($modoOperacao)) || (is_null($modoOperacao)) || (!is_numeric($modoOpe
 					else {
 						$r = $consulta->fetch(PDO::FETCH_ASSOC);
 						if ($r['COUNT(id)'] == 0) $mensagem = "Não há cartas de correção armazenadas.";
-						else	$mensagem = "Há " . $r['COUNT(id)'] . " cartas de correção armazenadas.";
+						else	$mensagem = "Há " . $r['COUNT(id)'] . " carta(s) de correção armazenada(s).";
+					}
+					?>
+					<p><?php print $mensagem; ?></p>
+					
+					<h4>Cancelamento</h4>
+					<?php
+					$consulta = $objetoPDO->query("SELECT COUNT(id) FROM cancelamento");
+					if (!$consulta) $mensagem = "Oooops! Ocorreu um erro ao realizar a consulta ao banco de dados";
+					else {
+						$r = $consulta->fetch(PDO::FETCH_ASSOC);
+						if ($r['COUNT(id)'] == 0) $mensagem = "Não há cancelamentos armazenados.";
+						else	$mensagem = "Há " . $r['COUNT(id)'] . " cancelamento(s) armazenado(s).";
 					}
 					?>
 					<p><?php print $mensagem; ?></p>
@@ -130,7 +144,7 @@ if ((!isset($modoOperacao)) || (is_null($modoOperacao)) || (!is_numeric($modoOpe
 					else {
 						$r = $consulta->fetch(PDO::FETCH_ASSOC);
 						if ($r['COUNT(id)'] == 0) $mensagem = "Não há conhecimentos de transporte armazenados.";
-						else $mensagem = "Há " . $r['COUNT(id)'] . " conhecimentos de transporte armazenados.";
+						else $mensagem = "Há " . $r['COUNT(id)'] . " conhecimento(s) de transporte armazenado(s).";
 					}
 					?>
 					<p><?php print $mensagem; ?></p>
@@ -147,7 +161,7 @@ if ((!isset($modoOperacao)) || (is_null($modoOperacao)) || (!is_numeric($modoOpe
 						if ($r['COUNT(id)'] == 0) $mensagem = "Não há arquivos XML faltando para as notas fiscais emitidas para esta empresa.";
 						else {
 							$mensagem = "<a href='pesquisarNfesEmitidas.php?xml_esta_no_sistema=nao'>
-							Faltam " . $r['COUNT(id)'] . " arquivos XML de notas emitidas para esta empresa. <span class='label label-important'>Verifique!</span>
+							Faltam " . $r['COUNT(id)'] . " arquivo(s) XML de notas emitidas para esta empresa. <span class='label label-important'>Verifique!</span>
 							</a>";
 						}
 					}
@@ -165,7 +179,7 @@ if ((!isset($modoOperacao)) || (is_null($modoOperacao)) || (!is_numeric($modoOpe
 							$consulta2 = $objetoPDO->query("SELECT min(data_importacao) AS data_minima, max(data_importacao) AS data_maxima FROM nao_identificado");
 							$r2 = $consulta2->fetch(PDO::FETCH_ASSOC);
 							$mensagem = "<a href='pesquisarNaoIdentificados.php?data_inicial_importacao=" . $r2['data_minima'] . "&data_final_importacao=" . $r2['data_maxima'] . "'>
-							Há " . $r['COUNT(id)'] . " arquivos xml não identificados. <span class='label label-important'>Verifique!</span>
+							Há " . $r['COUNT(id)'] . " arquivo(s) xml não identificado(s). <span class='label label-important'>Verifique!</span>
 							</a>";
 						}
 					}
@@ -183,7 +197,7 @@ if ((!isset($modoOperacao)) || (is_null($modoOperacao)) || (!is_numeric($modoOpe
 							$consulta2 = $objetoPDO->query("SELECT min(data_registro) AS data_minima, max(data_registro) AS data_maxima FROM xml_invalido");
 							$r2 = $consulta2->fetch(PDO::FETCH_ASSOC);
 							$mensagem = "<a href='pesquisarInvalidos.php?data_inicial_registro=" . $r2['data_minima'] . "&data_final_registro=" . $r2['data_maxima'] . "'>
-									Há " . $r['COUNT(id)'] . " arquivos xml não validados pela receita. <span class='label label-important'>Verifique!</span>
+									Há " . $r['COUNT(id)'] . " arquivo(s) xml não validado(s) pela receita. <span class='label label-important'>Verifique!</span>
 									</a>";
 						}
 					}

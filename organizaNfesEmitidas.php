@@ -1,5 +1,4 @@
 <?php
-
 /*
 Organizador xml
 Copyright (C) 2013Tobias <tobiasette@gmail.com>
@@ -23,8 +22,8 @@ podeserconsumidopordestinatáriodeNF-e,PessoaJurídica,
 quepossuaum certificado digital de PJ com o seu CNPJ base.
 página 13 da nota técnica 2012/002
 
-Aempresadeveráaguardarumtempomínimode1horaparaefetuarumanovasolicitaçãode
-distribuição,casorecebaaindicaçãoquenãoexistemmaisdocumentosaserempesquisadosna
+Aempresa deverá aguardar um tempo mínimo de 1 hora para efetuar uma nova solicitação de
+distribuição, caso receba aindicação que nãoexiste mmais documentos a serem pesquisados na
 base de dados da SEFAZ (indCont=0).
 pagina 26.
 IMPORTANTE: Este script deverá rodar a cada uma hora.
@@ -106,10 +105,9 @@ IMPORTANTE: O campo ultNSU representa a numeração única da NF-e dentro do amb
 estásendoconsultado.Seestiversendoconsultado oAN,esteseráovalordoNSU_RFB.Se
 tiver sendo consulta uma determinada SEFAZ, este será o valor do NSU_SEFAZ_XX.
 pagina 13 da nota técnica 2012/002 */
-$buscaUltimoNSU = $objetoPDO->query("SELECT max(nsu) AS ultimo FROM nota_fiscal_destinada")->fetch();
-if (empty($buscaUltimoNSU['ultimo'])) $ultNSU = 0;
-else $ultNSU = $buscaUltimoNSU['ultimo'];
-
+/*Se o NSU nao for especificado a lib nfePHP irá pegar o ultimo valor armazenada em config/numNSU.xml*/
+$ultNSU = 0;
+/* usa ambiente Nacional para buscar a lista de NFe, FALSE usa sua própria SEFAZ */
 $AN = true;
 
 $retorno = array();
@@ -119,7 +117,7 @@ $continuacao = 1;
  * CONSULTA NFEs
  * ************************************ */
 while ($continuacao == 1) {
-	/* (pag 14) Amensagemserádescartadaseotamanhoexcederolimiteprevisto(10KB). */
+	/* (pag 14) Amensagem será descartada se o tamanho exceder o limite previsto(10KB). */
 	if (!$xml = $objetoNfe->getListNFe($AN, $indNFe, $indEmi, $ultNSU, $tpAmb, $modSOAP, $retorno)) {
 		logar("[erro 001] durante a obtencao da listagem das notas fiscais. Detalhes: " . $objetoNfe->errMsg);
 		sair();
@@ -146,7 +144,7 @@ while ($continuacao == 1) {
 	1=SEFAZ possui mais documentos para o CNPJ informado, ou
 	ainda não avaliou a totalidade da sua base de dados. */
 	$continuacao = $objetoDOM->getElementsByTagName('indCont')->item(0)->nodeValue;
-	// Conjunto de informações resumo da NF-e, Cancelamento e CC e localizadas 
+	// Conjunto de informações resumo da NF-e, Cancelamento e CCe localizadas 
 	$retornos = $objetoDOM->getElementsByTagName('ret');
 	foreach ($retornos as $retorno) { //maximo de 50 registros
 		if (is_object($retorno->getElementsByTagName('resNFe'))) { //evento é uma nfe
@@ -213,8 +211,7 @@ VALUES ('$dataAtual','$horaAtual','$tipoRegistro','$nsuAtual','$chaveNota','$dat
 			}
 
 			$pesquisaNSUjaInserido = $objetoPDO->query("SELECT id FROM nota_fiscal_destinada WHERE nsu = '$nsuAtual'");
-			if ($pesquisaNSUjaInserido->rowCount() > 0)
-				continue;
+			if ($pesquisaNSUjaInserido->rowCount() > 0) continue;
 
 			try {
 				if (!$objetoPDO->query($queryInserir)) {
@@ -237,7 +234,9 @@ VALUES ('$dataAtual','$horaAtual','$tipoRegistro','$nsuAtual','$chaveNota','$dat
 	} //fim do loop para cada retorno
 } // fim do while de continuação
 
-logar("$numeroItensInseridos notas fiscais destinadas foram inseridas no banco de dados");
+if ($numeroItensInseridos > 0) {
+	logar("$numeroItensInseridos notas fiscais destinadas foram inseridas no banco de dados");
+}
 
 /* * ****************************************
  * VERIFICA QUAIS XMLs JÁ ESTÃO NO SISTEMA
@@ -245,10 +244,11 @@ logar("$numeroItensInseridos notas fiscais destinadas foram inseridas no banco d
 
 $buscaNFeSemXML = $objetoPDO->query("SELECT id, chave FROM nota_fiscal_destinada WHERE xml_esta_no_sistema = false");
 while ($NFeSemXML = $buscaNFeSemXML->fetch()) {
-	$buscaXMLNFe = $objetoPDO->query("SELECT id FROM nota_fiscal WHERE chave_nota = '{$NFeSemXML['chave']}'");
-	$buscaXMLCTe = $objetoPDO->query("SELECT id FROM conhecimento_transporte WHERE chave_conhecimento = '{$NFeSemXML['chave']}'");
-	$buscaXMLCCe = $objetoPDO->query("SELECT id FROM carta_correcao WHERE chave_nota = '{$NFeSemXML['chave']}'");
-	if (($buscaXMLNFe->rowCount() > 0) || ($buscaXMLCTe->rowCount() > 0) || ($buscaXMLCCe->rowCount() > 0)) {
+	$buscaXMLNFe	= $objetoPDO->query("SELECT id FROM nota_fiscal WHERE chave_nota = '{$NFeSemXML['chave']}'");
+	$buscaXMLCTe	= $objetoPDO->query("SELECT id FROM conhecimento_transporte WHERE chave_conhecimento = '{$NFeSemXML['chave']}'");
+	$buscaXMLCCe	= $objetoPDO->query("SELECT id FROM carta_correcao WHERE chave_nota = '{$NFeSemXML['chave']}'");
+	$buscaXMLCanc	= $objetoPDO->query("SELECT id FROM cancelamento WHERE chave_nota = '{$NFeSemXML['chave']}'");
+	if ( ($buscaXMLNFe->rowCount() > 0) || ($buscaXMLCTe->rowCount() > 0) || ($buscaXMLCCe->rowCount() > 0) || ($buscaXMLCanc->rowCount() > 0) ) {
 		if (!$objetoPDO->exec("UPDATE nota_fiscal_destinada SET xml_esta_no_sistema = true WHERE id = '{$NFeSemXML['id']}'")) {
 			logar("[erro ] nenhum registro de nota fiscal destinada foi atualizado. ID do registro: {$NFeSemXML['id']}");
 		}

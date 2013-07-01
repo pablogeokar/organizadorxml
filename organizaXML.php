@@ -534,10 +534,11 @@ function organizaXML($arquivo) {
 			logar("[erro 087] na consulta de validade do xml. Detalhes: ".$e->getMessage());
 			return FALSE;
 		}
-		if ( (! $consultaValidade) && (! preg_match('/SSL connection timeout/i', $objetoNfe->errMsg)) ) {
+		// "Nao houve retorno Soap" é uma string geralmente retornada nos erros
+		if ( (! $consultaValidade) && (! preg_match('/SSL connection timeout/i', $objetoNfe->errMsg)) && (! preg_match('/houve retorno Soap/i', $objetoNfe->errMsg)) ) {
 			logar("[alerta 088] arquivo '$arquivo' nao eh um xml validado pela receita federal. Detalhes: ".$objetoNfe->errMsg);
 			$queryInserirInvalido = "INSERT INTO xml_invalido (data_registro,hora_registro,tipo_arquivo,id_arquivo,mensagem)
-			VALUES('$dataAtual','$horaAtual','$tipoXML','".$objetoPDO->lastInsertId()."','".utf8_decode($objetoNfe->errMsg)."')";
+			VALUES('$dataAtual','$horaAtual','$tipoXML','".$objetoPDO->lastInsertId()."','".addslashes(utf8_decode($objetoNfe->errMsg))."')";
 			if (! $objetoPDO->query($queryInserirInvalido)) {
 				$e = $objetoPDO->errorInfo();
 				logar("[erro 089] erro ao inserir dados do xml invalido no banco de dados. Detalhes: ".$e[0]." ".$e[1]." ".$e[2]);

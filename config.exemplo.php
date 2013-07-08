@@ -58,7 +58,7 @@ $bdHost = '127.0.0.1';
 $bdPort = 3306;
 $bdUsuario = 'usuario';
 $bdSenha = 'senha';
-$bdNomeBanco = 'organizaXML';
+$bdNomeBanco = 'organizaxml';
 
 /* Método de login.
 nenhum - nao utilizar login
@@ -70,6 +70,12 @@ $ldapServidor = '127.0.0.1';
 $ldapPorta = 389;
 $ldapDN = "ou=Usuarios,dc=organizacao,dc=com,dc=br";
 $ldapIdentificadorUsuario = "uid";
+// se definido, somente usuarios deste grupo poderao logar
+$ldapGrupo = 'cn=organizadorxml,ou=Grupos,dc=organizacao,dc=com,dc=br';
+
+/* Define se o sistema irá armazenar no banco de 
+dados os acessos feitos ao sistema. */
+$logarAcessos = 1;
 
 /* Timezone da aplicação, para uma lista veja: 
 http://www.php.net/manual/pt_BR/timezones.america.php */

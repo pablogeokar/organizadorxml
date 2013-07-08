@@ -36,7 +36,14 @@ if (!$conexaoLdap = ldap_connect($ldapServidor, $ldapPorta)) {
 	ldap_set_option($conexaoLdap, LDAP_OPT_PROTOCOL_VERSION, 3);
 	$usuarioLDAP = "{$ldapIdentificadorUsuario}=$usuarioLogin,$ldapDN";
 	$bind = ldap_bind($conexaoLdap, $usuarioLDAP, $senhaLogin);
-	if ($bind)
+	if ($bind) {
 		$retornoLogin = 1;
+		if ( (isset($ldapGrupo)) && (! empty($ldapGrupo)) ) {
+			$pesquisaGrupo = ldap_search($conexaoLdap,$ldapGrupo,"(memberUid=$usuarioLogin)");
+			if (ldap_count_entries($conexaoLdap, $pesquisaGrupo) < 1 ) {
+				$retornoLogin = -1;
+			}
+		}
+	}
 	ldap_close($conexaoLdap);
 }

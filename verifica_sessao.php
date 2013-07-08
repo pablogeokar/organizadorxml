@@ -40,3 +40,25 @@ if ((!isset($modoLogin)) || (empty($modoLogin)) || ((strtolower($modoLogin) != '
 		$_SESSION['timeout'] = time();
 	}
 }
+
+if ( (!isset($logarAcessos)) || (empty($logarAcessos)) || (!is_numeric($logarAcessos)) || ($logarAcessos != 1) ) {
+	//
+}
+else {
+	// registra o acesso a pagina que incluiu esta
+	try {
+		$objetoPDO = new PDO("mysql:host=$bdHost;port=$bdPort;dbname=$bdNomeBanco", "$bdUsuario", "$bdSenha");
+	} catch (PDOException $e) {
+		logar("[erro] ao conectar ao banco de dados: " . $e->getMessage());
+	}
+
+	$dataAtual = date('Y-m-d');
+	$horaAtual = date('G:i:s');
+	$paginaSendoAcessada = basename($_SERVER["PHP_SELF"]);
+	$parametros = addslashes($_SERVER['QUERY_STRING']);
+	$userAgent = addslashes($_SERVER['HTTP_USER_AGENT']);
+
+	$objetoPDO->query("INSERT INTO registro_acesso
+		(data,hora,usuario,pagina,parametros,endereco_ip_origem,user_agent)
+	VALUES('$dataAtual','$horaAtual','{$_SESSION['usuario']}','$paginaSendoAcessada','$parametros','{$_SERVER['REMOTE_ADDR']}','$userAgent')");
+}

@@ -76,9 +76,18 @@ if ((isset($_POST['entrar'])) && (!empty($usuarioLogin)) && (!empty($senhaLogin)
 			session_regenerate_id();
 			$pathScript = obtemPathScript();
 			header("Location: {$pathScript}index.php");
-		} else {
+		}
+		elseif ($retornoLogin == 0) {
 			$tipoMensagem = "error";
 			$mensagem = "Usuário ou senha incorretos";
+		}
+		elseif ($retornoLogin == -1) {
+			$tipoMensagem = "error";
+			$mensagem = "Usuário não está habilitado";
+		}
+		else {
+			$tipoMensagem = "error";
+			$mensagem = "Erro no login";
 		}
 	}
 }

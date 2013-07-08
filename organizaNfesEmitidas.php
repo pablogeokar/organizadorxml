@@ -106,24 +106,36 @@ estásendoconsultado.Seestiversendoconsultado oAN,esteseráovalordoNSU_RFB.Se
 tiver sendo consulta uma determinada SEFAZ, este será o valor do NSU_SEFAZ_XX.
 pagina 13 da nota técnica 2012/002 */
 /*Se o NSU nao for especificado a lib nfePHP irá pegar o ultimo valor armazenada em config/numNSU.xml*/
+/*
+$buscaUltimoNSU = $objetoPDO->query("SELECT max(nsu) AS ultimo FROM nota_fiscal_destinada")->fetch();
+if (empty($buscaUltimoNSU['ultimo'])) $ultNSU = 0;
+else $ultNSU = $buscaUltimoNSU['ultimo'];
+ */
 $ultNSU = 0;
 /* usa ambiente Nacional para buscar a lista de NFe, FALSE usa sua própria SEFAZ */
 $AN = true;
 
 $retorno = array();
 $numeroItensInseridos = 0;
+$numeroIteracoes = 0;
 $continuacao = 1;
 /* * ***********************************
  * CONSULTA NFEs
  * ************************************ */
 while ($continuacao == 1) {
+	$numeroIteracoes++;
+	if ($numeroIteracoes > 300) {
+		// O retorno pode vir vazio mas o indicador de continuação está presente,
+		// tento pegar o maximo de registros possiveis, consultando varias vezes
+		logar("[alerta] script encerrado devido a varias requisicoes ja feitas");
+		$continuacao = 0;
+		continue;
+	}
 	/* (pag 14) Amensagem será descartada se o tamanho exceder o limite previsto(10KB). */
 	if (!$xml = $objetoNfe->getListNFe($AN, $indNFe, $indEmi, $ultNSU, $tpAmb, $modSOAP, $retorno)) {
 		logar("[erro 001] durante a obtencao da listagem das notas fiscais. Detalhes: " . $objetoNfe->errMsg);
 		sair();
 	}
-	//header('Content-type: text/xml; charset=UTF-8');
-	//var_dump($xml);
 	// Começa na pagina 11 da nota técnica 2012/002
 	$objetoDOM->loadXML($xml);
 
@@ -132,18 +144,20 @@ while ($continuacao == 1) {
 		$continuacao = 0;
 		continue;
 	}
-	if ($objetoDOM->getElementsByTagName('cStat')->item(0)->nodeValue != '138') {
-		//logar("nao ha resultados");
-		$continuacao = 0;
-		continue;
-	}
-
+	
 	/* pagina 12 da nota técnica 2012/002
 	Indicador de continuação:
 	0=SEFAZ não possui mais documentos para o CNPJ informado;
 	1=SEFAZ possui mais documentos para o CNPJ informado, ou
 	ainda não avaliou a totalidade da sua base de dados. */
 	$continuacao = $objetoDOM->getElementsByTagName('indCont')->item(0)->nodeValue;
+	
+	if ($objetoDOM->getElementsByTagName('cStat')->item(0)->nodeValue != '138') {
+		//logar("nao ha resultados");
+		//$continuacao = 0;
+		continue;
+	}
+	
 	// Conjunto de informações resumo da NF-e, Cancelamento e CCe localizadas 
 	$retornos = $objetoDOM->getElementsByTagName('ret');
 	foreach ($retornos as $retorno) { //maximo de 50 registros
@@ -223,13 +237,8 @@ VALUES ('$dataAtual','$horaAtual','$tipoRegistro','$nsuAtual','$chaveNota','$dat
 				logar("[erro 005] ao inserir valores no banco de dados. Detalhes: " . $e->getMessage());
 				continue;
 			}
-
+			
 			$numeroItensInseridos++;
-			if ($numeroItensInseridos > 100) {
-				logar("[erro 006] o script encontrou mais de 100 resultados! Execucao abortada para nao consumir recursos desnecessarios do webservice");
-				$continuacao = 0;
-				continue;
-			}
 		} // fim do loop para cada resnfe, ou resscan ou rescce
 	} //fim do loop para cada retorno
 } // fim do while de continuação

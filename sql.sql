@@ -114,6 +114,43 @@ CREATE  TABLE IF NOT EXISTS `organizaxml`.`nota_fiscal_destinada` (
   PRIMARY KEY (`id`) )
 ENGINE = MyISAM;
 
+
+-- -----------------------------------------------------
+-- Table `organizaxml`.`cancelamento`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `organizaxml`.`cancelamento` (
+  `id` INT NOT NULL AUTO_INCREMENT ,
+  `data_importacao` DATE NOT NULL ,
+  `hora_importacao` TIME NOT NULL ,
+  `codigo_orgao` VARCHAR(2) NOT NULL ,
+  `cnpj_cpf_emitente` VARCHAR(14) NOT NULL ,
+  `chave_nota` VARCHAR(45) NOT NULL ,
+  `data_cancelamento` DATE NOT NULL ,
+  `hora_cancelamento` TIME NOT NULL ,
+  `numero_protocolo` INT NOT NULL ,
+  `justificativa_cancelamento` VARCHAR(250) NOT NULL ,
+  `cnpj_cpf_destinatario` VARCHAR(14) NULL ,
+  `caminho_relativo_arquivo` TEXT NULL ,
+  `xml` TEXT NULL ,
+  PRIMARY KEY (`id`) )
+ENGINE = MyISAM;
+
+
+-- -----------------------------------------------------
+-- Table `organizaxml`.`registro_acesso`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `organizaxml`.`registro_acesso` (
+  `id` INT NOT NULL AUTO_INCREMENT ,
+  `data` DATE NOT NULL ,
+  `hora` TIME NOT NULL ,
+  `usuario` VARCHAR(255) NULL ,
+  `pagina` VARCHAR(100) NOT NULL ,
+  `parametros` TEXT NULL ,
+  `endereco_ip_origem` VARCHAR(255) NULL ,
+  `user_agent` VARCHAR(255) NULL ,
+  PRIMARY KEY (`id`) )
+ENGINE = MyISAM;
+
 USE `organizaxml` ;
 
 

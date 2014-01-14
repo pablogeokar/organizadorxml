@@ -104,6 +104,7 @@ Organiza $arquivo
 function organizaXML($arquivo) {
 	global $cnpjCpfEmpresa,$diretorioXML,$diretorioDestinoXML,$diretorioTemp,$objetoPDO,$modoOperacao,$objetoNfe;
 	if (is_array($arquivo)) organizaXML($arquivo);
+	//logar("Processando arquivo '$arquivo'");
 	if (! isXML($arquivo)) {
 		logar("[alerta 061] arquivo '$arquivo' nao eh xml");
 		return FALSE;
@@ -465,15 +466,15 @@ function organizaXML($arquivo) {
 	elseif ($tipoXML == 'cancelamento') {
 		if ($modoOperacao == 2) {
 			$queryInserir = "INSERT INTO cancelamento
-			(data_importacao,hora_importacao,codigo_orgao,cnpj_cpf_emitente,chave_nfe,data_cancelamento,hora_cancelamento,numero_protocolo,justificativa_cancelamento,cnpj_cpf_destinatario,caminho_relativo_arquivo)
+			(data_importacao,hora_importacao,codigo_orgao,cnpj_cpf_emitente,chave_nota,data_cancelamento,hora_cancelamento,numero_protocolo,justificativa_cancelamento,cnpj_cpf_destinatario,caminho_relativo_arquivo)
 			VALUES ('$dataAtual','$horaAtual','$codigoOrgao','$cnpjCpfEmitente','$chaveNota','$dataCancelamento','$horaCancelamento','$numeroProtocolo','$justificativaCancelamento','$cnpjCpfDestinatario','$caminhoRelativoArquivo')";
 		}
 		elseif ($modoOperacao == 3) {
 			$queryInserir = "INSERT INTO cancelamento
-			(data_importacao,hora_importacao,codigo_orgao,cnpj_cpf_emitente,chave_nfe,data_cancelamento,hora_cancelamento,numero_protocolo,justificativa_cancelamento,cnpj_cpf_destinatario,xml)
+			(data_importacao,hora_importacao,codigo_orgao,cnpj_cpf_emitente,chave_nota,data_cancelamento,hora_cancelamento,numero_protocolo,justificativa_cancelamento,cnpj_cpf_destinatario,xml)
 			VALUES ('$dataAtual','$horaAtual','$codigoOrgao','$cnpjCpfEmitente','$chaveNota','$dataCancelamento','$horaCancelamento','$numeroProtocolo','$justificativaCancelamento','$cnpjCpfDestinatario','$conteudoXMLArquivo')";
 		}
-		$queryBuscar = "SELECT id FROM cancelamento WHERE chave_nfe = '$chaveNota'";
+		$queryBuscar = "SELECT id FROM cancelamento WHERE chave_nota = '$chaveNota'";
 		$queryDeletar = "DELETE FROM cancelamento WHERE id = :id";
 	}
 	elseif ($tipoXML == 'nao_identificado') {
@@ -493,11 +494,11 @@ function organizaXML($arquivo) {
 			$resultadosBusca = $objetoPDO->query($queryBuscar);
 		}
 		catch (PDOException $e) {
-			logar("[erro 082] ao buscar possiveis registros anteriores. Detalhes: ".$e->getMessage());
+			logar("[erro 082] ao buscar possiveis registros anteriores durante o processamento do arquivo '$arquivo'. Detalhes: ".$e->getMessage().". Query: $queryBuscar");
 		}
 		if (! $resultadosBusca) {
 			$e = $objetoPDO->errorInfo();
-			logar("[erro 083] ao buscar possiveis registros anteriores. Detalhes: ".$e[0]." ".$e[1]." ".$e[2]);
+			logar("[erro 083] ao buscar possiveis registros anteriores durante o processamento do arquivo '$arquivo'. Detalhes: ".$e[0]." ".$e[1]." ".$e[2].". Query: $queryBuscar");
 		}
 		else {
 			while ($resultadoBusca = $resultadosBusca->fetch(PDO::FETCH_OBJ)) {
@@ -516,11 +517,11 @@ function organizaXML($arquivo) {
 		try {
 			if (! $objetoPDO->query($queryInserir)) {
 				$e = $objetoPDO->errorInfo();
-				logar("[erro 085] ao inserir dados no banco de dados. Detalhes: ".$e[0]." ".$e[1]." ".$e[2]);
+				logar("[erro 085] ao inserir dados no banco de dados durante o processamento do arquivo '$arquivo'. Detalhes: ".$e[0]." ".$e[1]." ".$e[2].". Query: $queryInserir");
 				return FALSE;
 			}
 		} catch(PDOException $e) {
-			logar("[erro 086] ao inserir valores no banco de dados. Detalhes: ".$e->getMessage());
+			logar("[erro 086] ao inserir valores no banco de dados durante o processamento do arquivo '$arquivo'. Detalhes: ".$e->getMessage().". Query: $queryInserir");
 			return FALSE;
 		}
 	}
@@ -541,7 +542,7 @@ function organizaXML($arquivo) {
 			VALUES('$dataAtual','$horaAtual','$tipoXML','".$objetoPDO->lastInsertId()."','".addslashes(utf8_decode($objetoNfe->errMsg))."')";
 			if (! $objetoPDO->query($queryInserirInvalido)) {
 				$e = $objetoPDO->errorInfo();
-				logar("[erro 089] erro ao inserir dados do xml invalido no banco de dados. Detalhes: ".$e[0]." ".$e[1]." ".$e[2]);
+				logar("[erro 089] erro ao inserir dados do xml invalido no banco de dados. Detalhes: ".$e[0]." ".$e[1]." ".$e[2].". Query: $queryInserirInvalido");
 				return FALSE;
 			}
 		}
@@ -698,7 +699,7 @@ else {
 					$deletarMensagem = false;
 					continue;
 				}
-				$nomeAnexo = strtolower($parte->parameters[0]->value);
+				$nomeAnexo = md5(strtolower($parte->parameters[0]->value));
 				$nomeArquivoAnexo = $diretorioTemp.DS."email_".$nomeAnexo;
 				//Da mensagem, pega o conteúdo do anexo
 				// http://garrettstjohn.com/entry/extracting-attachments-from-emails-with-php/

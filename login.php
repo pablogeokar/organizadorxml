@@ -73,6 +73,7 @@ if ((isset($_POST['entrar'])) && (!empty($usuarioLogin)) && (!empty($senhaLogin)
 			}*/
 			session_start("organizadorxml");
 			$_SESSION['usuario'] = $usuarioLogin;
+			$_SESSION['uid'] = md5(uniqid(rand(), true));
 			session_regenerate_id();
 			$pathScript = obtemPathScript();
 			header("Location: {$pathScript}index.php");

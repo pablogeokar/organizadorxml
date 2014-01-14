@@ -54,11 +54,15 @@ else {
 
 	$dataAtual = date('Y-m-d');
 	$horaAtual = date('G:i:s');
+	if ( (isset($_SESSION)) && (! empty($_SESSION['usuario'])) ) $usuarioSessao = $_SESSION['usuario'];
+	else $usuarioSessao = null;
 	$paginaSendoAcessada = basename($_SERVER["PHP_SELF"]);
 	$parametros = addslashes($_SERVER['QUERY_STRING']);
 	$userAgent = addslashes($_SERVER['HTTP_USER_AGENT']);
+	if ( (isset($_SESSION)) && (! empty($_SESSION['uid'])) ) $uidSessao = $_SESSION['uid'];
+	else $uidSessao = null;
 
 	$objetoPDO->query("INSERT INTO registro_acesso
-		(data,hora,usuario,pagina,parametros,endereco_ip_origem,user_agent)
-	VALUES('$dataAtual','$horaAtual','{$_SESSION['usuario']}','$paginaSendoAcessada','$parametros','{$_SERVER['REMOTE_ADDR']}','$userAgent')");
+		(data,hora,usuario,pagina,parametros,endereco_ip_origem,user_agent,id_sessao)
+	VALUES('$dataAtual','$horaAtual','$usuarioSessao','$paginaSendoAcessada','$parametros','{$_SERVER['REMOTE_ADDR']}','$userAgent','$uidSessao')");
 }

@@ -241,6 +241,10 @@ VALUES ('$dataAtual','$horaAtual','$tipoRegistro','$nsuAtual','$chaveNota','$dat
 			$numeroItensInseridos++;
 		} // fim do loop para cada resnfe, ou resscan ou rescce
 	} //fim do loop para cada retorno
+	//"tem de haver um intervalo de tempo entre cada pesquisa caso contrario o
+	//webservice pode parar de responder, considerando ou um excesso de consultas
+	//ou um ataque DoS"
+	sleep(5);
 } // fim do while de continuação
 
 if ($numeroItensInseridos > 0) {

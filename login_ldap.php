@@ -21,7 +21,7 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "config.php");
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "util.php");
 
 // ldap_bind retorna warning caso o bind nao seja realizado
-error_reporting(0);
+//error_reporting(0);
 
 $retornoLogin = 0;
 
@@ -35,7 +35,7 @@ if (!$conexaoLdap = ldap_connect($ldapServidor, $ldapPorta)) {
 } else {
 	ldap_set_option($conexaoLdap, LDAP_OPT_PROTOCOL_VERSION, 3);
 	$usuarioLDAP = "{$ldapIdentificadorUsuario}=$usuarioLogin,$ldapDN";
-	$bind = ldap_bind($conexaoLdap, $usuarioLDAP, $senhaLogin);
+	$bind = @ldap_bind($conexaoLdap, $usuarioLDAP, $senhaLogin);
 	if ($bind) {
 		$retornoLogin = 1;
 		if ( (isset($ldapGrupo)) && (! empty($ldapGrupo)) ) {

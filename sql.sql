@@ -24,7 +24,6 @@ CREATE  TABLE IF NOT EXISTS `organizaxml`.`cancelamento` (
   `xml` TEXT NULL DEFAULT NULL ,
   PRIMARY KEY (`id`) )
 ENGINE = MyISAM
-AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = utf8;
 
 
@@ -44,7 +43,6 @@ CREATE  TABLE IF NOT EXISTS `organizaxml`.`carta_correcao` (
   `xml` TEXT NULL DEFAULT NULL ,
   PRIMARY KEY (`id`) )
 ENGINE = MyISAM
-AUTO_INCREMENT = 15
 DEFAULT CHARACTER SET = utf8;
 
 
@@ -104,7 +102,6 @@ CREATE  TABLE IF NOT EXISTS `organizaxml`.`nota_fiscal` (
   `xml` TEXT NULL DEFAULT NULL ,
   PRIMARY KEY (`id`) )
 ENGINE = MyISAM
-AUTO_INCREMENT = 624
 DEFAULT CHARACTER SET = utf8;
 
 
@@ -128,7 +125,6 @@ CREATE  TABLE IF NOT EXISTS `organizaxml`.`nota_fiscal_destinada` (
   `xml_esta_no_sistema` TINYINT(1) NOT NULL DEFAULT '0' ,
   PRIMARY KEY (`id`) )
 ENGINE = MyISAM
-AUTO_INCREMENT = 367
 DEFAULT CHARACTER SET = utf8;
 
 
@@ -147,7 +143,6 @@ CREATE  TABLE IF NOT EXISTS `organizaxml`.`registro_acesso` (
   `id_sessao` CHAR(32) NULL ,
   PRIMARY KEY (`id`) )
 ENGINE = MyISAM
-AUTO_INCREMENT = 465
 DEFAULT CHARACTER SET = utf8;
 
 
@@ -163,8 +158,17 @@ CREATE  TABLE IF NOT EXISTS `organizaxml`.`xml_invalido` (
   `mensagem` VARCHAR(500) NULL DEFAULT NULL ,
   PRIMARY KEY (`id`) )
 ENGINE = MyISAM
-AUTO_INCREMENT = 10
 DEFAULT CHARACTER SET = utf8;
+
+ CREATE TABLE `organizaxml`.`manifestacoes` (
+`id` INT(11) NOT NULL AUTO_INCREMENT ,
+`data_hora` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+`chave` CHAR( 44 ) NOT NULL ,
+`tipo_evento` CHAR( 6 ) NOT NULL ,
+`justificativa` TEXT NOT NULL ,
+`ambiente` CHAR( 1 ) NOT NULL ,
+PRIMARY KEY (`id`)
+) ENGINE = MYISAM ;
 
 USE `organizaxml` ;
 

@@ -48,6 +48,7 @@ $diretorioTemp = sys_get_temp_dir();
 $cnpjCpfEmpresa = '01234567891234';
 
 /* Dados da conta imap que será lida em busca de xmls.
+ * Exemplo para o gmail: '{imap.gmail.com:993/imap/ssl}INBOX'
 Para mais informações veja http://php.net/manual/pt_BR/function.imap-open.php */
 $emailStringConexao = '{mail.provedor.com.br:143/imap/novalidate-cert}INBOX';
 $emailUsuario = 'usuario@provedor.com.br';
@@ -76,6 +77,11 @@ $ldapGrupo = 'cn=organizadorxml,ou=Grupos,dc=organizacao,dc=com,dc=br';
 /* Define se o sistema irá armazenar no banco de 
 dados os acessos feitos ao sistema. */
 $logarAcessos = 1;
+
+/* Depois de quantos dias, a partir da data de emissão de uma nota fiscal
+ * destinada a este cnpj, será feito o download.
+ */
+$diasDownload = 5;
 
 /* Timezone da aplicação, para uma lista veja: 
 http://www.php.net/manual/pt_BR/timezones.america.php */

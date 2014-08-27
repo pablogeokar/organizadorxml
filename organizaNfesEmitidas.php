@@ -26,7 +26,8 @@ Aempresa deverá aguardar um tempo mínimo de 1 hora para efetuar uma nova solic
 distribuição, caso receba aindicação que nãoexiste mmais documentos a serem pesquisados na
 base de dados da SEFAZ (indCont=0).
 pagina 26.
-IMPORTANTE: Este script deverá rodar a cada uma hora.
+IMPORTANTE: Este script deverá rodar a cada uma hora, no mínimo.
+ * Recomando rodar a cada três horas.
  */
 
 error_reporting(E_ALL);
@@ -119,6 +120,37 @@ $retorno = array();
 $numeroItensInseridos = 0;
 $numeroIteracoes = 0;
 $continuacao = 1;
+// para manifestacao e download
+/*
+ * 
+ * Código do evento: 
+210200 – Confirmação da Operação
+210210 – Ciência da Operação 
+210220 – Desconhecimento da Ope
+210240 – Operação não Realizada 
+ * 
+ * Evento de “Ciência da Operação” 
+Neste  evento,  o  destinatário  declara  ter  ciência  sobre  uma  determinada  operação  destinada  ao 
+seu CNPJ, mas não possui elementos suficientes para apresentar a sua manifestação conclusiva 
+sobre a operação citada. 
+
+O registro  deste  evento libera  também  a  possibilidade  da  empresa  efetuar  o  download  da  NF-e, 
+conforme especificado no “Serviço de Download das NF-e Confirmadas”. 
+
+O evento de “Ciência da Operação” é um evento opcional e pode ser evitado, já que normalmente 
+o  destinatário  da  NF-e  deve  possuir  o  arquivo  XML  da  NF-e  enviado  e/ou  disponibilizado  pelo 
+emitente. 
+
+Após  um  período  determinado,  todas  as  operações  com  “Ciência  da  Operação”  deverão 
+obrigatoriamente  ter  a  manifestação  final  do  destinatário  declarada  em  um  dos  eventos  de 
+Confirmação da Operação, Desconhecimento ou Operação não Realizada.
+ * 
+ * página 10
+ */
+$tipoEvento = 210210;
+$justificativaEvento = '';
+$manifestado = False;
+
 /* * ***********************************
  * CONSULTA NFEs
  * ************************************ */
@@ -240,6 +272,18 @@ VALUES ('$dataAtual','$horaAtual','$tipoRegistro','$nsuAtual','$chaveNota','$dat
 			
 			$numeroItensInseridos++;
 		} // fim do loop para cada resnfe, ou resscan ou rescce
+		if ($tipoRegistro == 1 || $tipoOperacao == 3) { // se for nfe ou carta de correção
+			// faço manifestação
+			$objetoNfe->errMsg = null; // zera as mensagens de erro, caso existam
+			$manifestado = $objetoNfe->manifDest($chaveNota, $tipoEvento, '', $tpAmb, $modSOAP);
+			if (! $manifestado) {
+				logar("Falha ao manifestar a nota com a chave \"$chaveNota\. Detalhes: ".rtrim($objetoNfe->errMsg));
+			}
+			else {
+				$objetoPDO->query("INSERT INTO manifestacoes VALUES($chaveNota, $tipoEvento, $justificativaEvento, $tpAmb);");
+				//logar("Nota \"$chaveNota\" manifestada");
+			}
+		}
 	} //fim do loop para cada retorno
 	//"tem de haver um intervalo de tempo entre cada pesquisa caso contrario o
 	//webservice pode parar de responder, considerando ou um excesso de consultas
@@ -247,9 +291,7 @@ VALUES ('$dataAtual','$horaAtual','$tipoRegistro','$nsuAtual','$chaveNota','$dat
 	sleep(5);
 } // fim do while de continuação
 
-if ($numeroItensInseridos > 0) {
-	logar("$numeroItensInseridos notas fiscais destinadas foram inseridas no banco de dados");
-}
+logar("$numeroItensInseridos notas fiscais destinadas foram inseridas no banco de dados");
 
 /* * ****************************************
  * VERIFICA QUAIS XMLs JÁ ESTÃO NO SISTEMA
@@ -267,4 +309,41 @@ while ($NFeSemXML = $buscaNFeSemXML->fetch()) {
 		}
 	}
 }
+
+/* * ****************************************
+ * Faz download
+ * Este processo vem depois da verificacao de
+ * quais xmls nao estao no sistema porque
+ * é outra rotina (que roda em intervalos 
+ * diferentes) que insere os xmls no sistema.
+ * ***************************************** */
+$numeroDownloads = 0;
+# É possível fazer download de notas que tenham até 30 dias
+$buscaNotasEmitidas = $objetoPDO->query("SELECT * FROM nota_fiscal_destinada WHERE
+	data_emissao <= DATE_SUB(CURDATE(),INTERVAL {$diasDownload} DAY)
+	AND data_emissao >= DATE_SUB(CURDATE(),INTERVAL 30 DAY)
+	AND xml_esta_no_sistema = 0");
+while ($notaEmitida = $buscaNotasEmitidas->fetch()) {
+	$objetoNfe->errMsg = null; // zera as mensagens de erro, caso existam
+	if (! $xmlDownload = $objetoNfe->getNFe(true, $notaEmitida['chave'], $tpAmb, $modSOAP)) {
+		logar("Falha ao fazer download da nota com chave \"{$notaEmitida['chave']}\".Detalhes: ".rtrim($objetoNfe->errMsg));
+	}
+	else {
+		$numeroDownloads++;
+	}
+
+	/* Move os xmls baixados pelo metodo getNFe para o diretorio analisado pelo orgnaizaXML.php */
+	$diretorioXMLBaixado = $diretorioArquivosNfe.DIRECTORY_SEPARATOR.'producao'.DIRECTORY_SEPARATOR.'recebidas'.DIRECTORY_SEPARATOR;
+	$ponteiroDirXMLBaixados = opendir($diretorioXMLBaixado);
+	while (false !== ($arquivo=readdir($ponteiroDirXMLBaixados))) {
+		$o = $diretorioXMLBaixado.DIRECTORY_SEPARATOR.$arquivo;
+		$d = $diretorioXML.DIRECTORY_SEPARATOR."dw_".$arquivo;
+		if (! is_file($o)) continue;
+		copy($o, $d);
+		unlink($o);
+	}
+	closedir($ponteiroDirXMLBaixados);
+}
+logar("$numeroDownloads downloads de notas fiscais");
+
 ?>

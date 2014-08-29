@@ -281,10 +281,10 @@ VALUES ('$dataAtual','$horaAtual','$tipoRegistro','$nsuAtual','$chaveNota','$dat
 			}
 			else {
 				$i = $objetoPDO->query("INSERT INTO manifestacoes (chave, tipo_evento, justificativa, ambiente)
-				VALUES('{$notaEmitida['chave']}', '$tipoEvento', '$justificativaEvento', '$tpAmb');");
+				VALUES('$chaveNota', '$tipoEvento', '$justificativaEvento', '$tpAmb');");
 				if (! $i) {
 					$e = $objetoPDO->errorInfo();
-					logar("Erro ao inserir dados da nota \"{$notaEmitida['chave']}\" manifestada. Detalhes: ".$e[0]." ".$e[1]." ".$e[2].".");
+					logar("Erro ao inserir dados da nota \"$chaveNota\" manifestada. Detalhes: ".$e[0]." ".$e[1]." ".$e[2].".");
 				}
 				//logar("Nota \"$chaveNota\" manifestada");
 			}
